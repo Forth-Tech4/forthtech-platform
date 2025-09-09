@@ -1,20 +1,22 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 interface IExercise {
+  _id?: mongoose.Types.ObjectId;
   question: string;
   hint?: string;
   solution?: string;
 }
 
 interface IQuiz {
+  _id?: mongoose.Types.ObjectId;
   question: string;
   options: string[];
   answer: string;
 }
 
 export interface ISection extends Document {
-  courseId: mongoose.Types.ObjectId;   
-  title: string;                      
+  courseId: mongoose.Types.ObjectId;
+  title: string;
   content: {
     markdown: string;
     exercises: IExercise[];
@@ -23,7 +25,11 @@ export interface ISection extends Document {
 }
 
 const courseSectionSchema = new Schema<ISection>({
-  courseId: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
+  courseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Course",
+    required: true,
+  },
   title: { type: String, required: true },
   content: {
     markdown: { type: String, required: true },
@@ -33,6 +39,7 @@ const courseSectionSchema = new Schema<ISection>({
         hint: { type: String },
         solution: { type: String },
       },
+        { _id: true } 
     ],
     quizzes: [
       {
@@ -40,6 +47,7 @@ const courseSectionSchema = new Schema<ISection>({
         options: [{ type: String, required: true }],
         answer: { type: String, required: true },
       },
+        { _id: true } 
     ],
   },
 });

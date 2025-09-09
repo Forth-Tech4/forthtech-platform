@@ -1,5 +1,6 @@
 import { successResponse, errorResponse } from "../utils/reponsehandler";
 import Category from "../models/category";
+import Index from "../models/indexes";
 export const categoryResolver = {
   Query: {
     categories: async () => {
@@ -8,10 +9,21 @@ export const categoryResolver = {
         if (!categories || categories.length === 0) {
           return errorResponse("No categories found");
         }
-        const mappedCategories = categories.map((c) => ({
-          ...c,
-          id: c._id.toString(),
-        }));
+
+        // attach indexes for each category
+        const mappedCategories = await Promise.all(
+          categories.map(async (c) => {
+            const indexes = await Index.find({ categoryId: c._id }).lean();
+            return {
+              ...c,
+              id: c._id.toString(),
+              indexes: indexes.map((i) => ({
+                ...i,
+                id: i._id.toString(),
+              })),
+            };
+          })
+        );
 
         return successResponse(
           mappedCategories,
@@ -29,10 +41,15 @@ export const categoryResolver = {
           return errorResponse("Category not found");
         }
 
-        // map _id → id
+        const indexes = await Index.find({ categoryId: id }).lean();
+
         const mappedCategory = {
           ...category,
           id: category._id.toString(),
+          indexes: indexes.map((i) => ({
+            ...i,
+            id: i._id.toString(),
+          })),
         };
 
         return successResponse(mappedCategory, "Category fetched successfully");

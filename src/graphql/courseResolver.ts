@@ -1,5 +1,5 @@
-import Course from "../models/courses"
-import { successResponse ,errorResponse} from "../utils/reponsehandler";
+import Course from "../models/courses";
+import { successResponse, errorResponse } from "../utils/reponsehandler";
 
 export const courseResolver = {
   Query: {
@@ -8,7 +8,7 @@ export const courseResolver = {
         const courses = await Course.find().lean();
         if (!courses.length) return errorResponse("No courses found");
         return successResponse(
-          courses.map(c => ({ ...c, id: c._id.toString() })),
+          courses.map((c) => ({ ...c, id: c._id.toString() })),
           "Courses fetched successfully"
         );
       } catch (err) {
@@ -20,7 +20,10 @@ export const courseResolver = {
       try {
         const course = await Course.findById(id).lean();
         if (!course) return errorResponse("Course not found");
-        return successResponse({ ...course, id: course._id.toString() }, "Course fetched successfully");
+        return successResponse(
+          { ...course, id: course._id.toString() },
+          "Course fetched successfully"
+        );
       } catch (err) {
         return errorResponse("Failed to fetch course", err);
       }
@@ -31,7 +34,7 @@ export const courseResolver = {
         const courses = await Course.find({ indexId }).lean();
         if (!courses.length) return errorResponse("No courses found for index");
         return successResponse(
-          courses.map(c => ({ ...c, id: c._id.toString() })),
+          courses.map((c) => ({ ...c, id: c._id.toString() })),
           "Courses fetched successfully"
         );
       } catch (err) {
@@ -43,6 +46,13 @@ export const courseResolver = {
   Mutation: {
     createCourse: async (_: any, { title, description, indexId }: any) => {
       try {
+        const existingCourse = await Course.findOne({ title, indexId });
+        if (existingCourse) {
+          return errorResponse(
+            "Course with this title already exists in the same index"
+          );
+        }
+
         const course = await Course.create({ title, description, indexId });
         return successResponse(course, "Course created successfully");
       } catch (err) {
@@ -50,9 +60,27 @@ export const courseResolver = {
       }
     },
 
-    updateCourse: async (_: any, { id, ...updates }: any) => {
+    updateCourse: async (_: any, { id, title, description, indexId }: any) => {
       try {
-        const course = await Course.findByIdAndUpdate(id, updates, { new: true });
+        console.log("dulepicatetttt..",id,title,description,indexId)
+        const duplicate = await Course.findOne({
+          title: title, // use new or old title
+          indexId: indexId, // use new or old indexId
+          _id: { $ne: id }, // exclude the current course
+        });
+
+        if (duplicate) {
+          return errorResponse(
+            "Another course with this title already exists in the same index"
+          );
+        }
+
+        // Proceed with update
+        const course = await Course.findByIdAndUpdate(
+          id,
+          { title, description, indexId },
+          { new: true }
+        );
         if (!course) return errorResponse("Course not found");
         return successResponse(course, "Course updated successfully");
       } catch (err) {

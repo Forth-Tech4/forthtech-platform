@@ -1,6 +1,20 @@
-// import { successResponse, errorResponse } from "../../utils/reponsehandler";
-import { successResponse,errorResponse } from "../utils/reponsehandler";
+import { successResponse, errorResponse } from "../utils/reponsehandler";
 import courseSection from "../models/courseSections";
+const mapSection = (section: any) => ({
+  ...section,
+  id: section._id.toString(),
+  content: {
+    ...section.content,
+    exercises: section.content.exercises?.map((e: any) => ({
+      ...e,
+      id: e._id.toString(),
+    })),
+    quizzes: section.content.quizzes?.map((q: any) => ({
+      ...q,
+      id: q._id.toString(),
+    })),
+  },
+});
 
 export const courseSectionResolver = {
   Query: {
@@ -9,7 +23,7 @@ export const courseSectionResolver = {
         const sections = await courseSection.find({ courseId }).lean();
         if (!sections.length) return errorResponse("No sections found");
         return successResponse(
-          sections.map(s => ({ ...s, id: s._id.toString() })),
+          sections.map((s) => mapSection(s)),
           "Sections fetched successfully"
         );
       } catch (err) {
@@ -21,7 +35,10 @@ export const courseSectionResolver = {
       try {
         const section = await courseSection.findById(id).lean();
         if (!section) return errorResponse("Section not found");
-        return successResponse({ ...section, id: section._id.toString() }, "Section fetched successfully");
+        return successResponse(
+          mapSection(section), // ✅ ensure quizzes/exercises get IDs
+          "Section fetched successfully"
+        );
       } catch (err) {
         return errorResponse("Failed to fetch section", err);
       }
@@ -29,34 +46,123 @@ export const courseSectionResolver = {
   },
 
   Mutation: {
-    createSection: async (_: any, { courseId, title, markdown, exercises, quizzes }: any) => {
+    createSection: async (
+      _: any,
+      { courseId, title, markdown, exercises, quizzes }: any
+    ) => {
       try {
         const section = await courseSection.create({
           courseId,
           title,
           content: { markdown, exercises, quizzes },
         });
-        return successResponse(section, "Section created successfully");
+        return successResponse(
+          mapSection(section.toObject()),
+          "Section created successfully"
+        );
       } catch (err) {
         return errorResponse("Failed to create section", err);
       }
     },
 
-    updateSection: async (_: any, { id, title, markdown, exercises, quizzes }: any) => {
+    // updateSection: async (
+    //   _: any,
+    //   { id, title, markdown, exercises, quizzes }: any
+    // ) => {
+    //   try {
+    //     const updates: any = {};
+    //     if (title) updates.title = title;
+    //     if (markdown || exercises || quizzes) {
+    //       updates.content = {};
+    //       if (markdown) updates.content.markdown = markdown;
+    //       if (exercises) updates.content.exercises = exercises;
+    //       if (quizzes) updates.content.quizzes = quizzes;
+    //     }
+
+    //     const section = await courseSection.findByIdAndUpdate(id, updates, {
+    //       new: true,
+    //     });
+    //     if (!section) return errorResponse("Section not found");
+
+    //     return successResponse(section, "Section updated successfully");
+    //   } catch (err) {
+    //     return errorResponse("Failed to update section", err);
+    //   }
+    // },
+
+    updateSection: async (
+      _: any,
+      { id, title, markdown, exercises, quizzes }: any
+    ) => {
       try {
+        console.log("ecxexxexex", exercises, quizzes);
         const updates: any = {};
+
         if (title) updates.title = title;
-        if (markdown || exercises || quizzes) {
-          updates.content = {};
-          if (markdown) updates.content.markdown = markdown;
-          if (exercises) updates.content.exercises = exercises;
-          if (quizzes) updates.content.quizzes = quizzes;
+        if (markdown) updates["content.markdown"] = markdown;
+
+        // --- Exercises ---
+        if (exercises && exercises.length > 0) {
+          for (const ex of exercises) {
+            if (ex.id) {
+              // Update existing exercise by id
+              await courseSection.updateOne(
+                { _id: id, "content.exercises._id": ex.id },
+                {
+                  $set: {
+                    "content.exercises.$.question": ex.question,
+                    "content.exercises.$.hint": ex.hint,
+                    "content.exercises.$.solution": ex.solution,
+                  },
+                }
+              );
+            } else {
+              console.log("ellelelleleekekek");
+              // Add new exercise
+              await courseSection.updateOne(
+                { _id: id },
+                { $push: { "content.exercises": ex } }
+              );
+            }
+          }
         }
 
-        const section = await courseSection.findByIdAndUpdate(id, updates, { new: true });
+        // --- Quizzes ---
+        if (quizzes && quizzes.length > 0) {
+          for (const q of quizzes) {
+            if (q.id) {
+              // Update existing quiz
+              await courseSection.updateOne(
+                { _id: id, "content.quizzes._id": q.id },
+                {
+                  $set: {
+                    "content.quizzes.$.question": q.question,
+                    "content.quizzes.$.options": q.options,
+                    "content.quizzes.$.answer": q.answer,
+                  },
+                }
+              );
+            } else {
+              // Add new quiz
+              await courseSection.updateOne(
+                { _id: id },
+                { $push: { "content.quizzes": q } }
+              );
+            }
+          }
+        }
+
+        // Apply simple updates (title, markdown)
+        const section = await courseSection.findByIdAndUpdate(id, updates, {
+          new: true,
+        });
+
         if (!section) return errorResponse("Section not found");
 
-        return successResponse(section, "Section updated successfully");
+        return successResponse(
+          mapSection(section.toObject()),
+          "Section updated successfully"
+        );
       } catch (err) {
         return errorResponse("Failed to update section", err);
       }
