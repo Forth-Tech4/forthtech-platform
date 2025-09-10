@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import schema from "./schema/schema";
 import cors from "cors";
 import path from "path";
-import uploadRouter from "../src/services/fileUpload"; // path to uploads.ts
+import uploadRouter from "./services/fileUpload"; // path to uploads.ts
 
 
 const startServer = async () => {
