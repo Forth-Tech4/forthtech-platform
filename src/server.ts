@@ -7,7 +7,6 @@ import path from "path";
 import uploadRouter from "./services/fileUpload"; // path to uploads.ts
 import { verifyAccessToken } from "./graphql/authResolver";
 
-
 const startServer = async () => {
   const app: any = express();
   // ✅ Allow all origins (no need to declare frontend URL)
@@ -37,9 +36,14 @@ const startServer = async () => {
       return { user };
     },
   });
+
+// // Increase JSON & URL-encoded body size limits
+// app.use(express.json({ limit: "1gb" }));
+// app.use(express.urlencoded({ limit: "1gb", extended: true }));
+
 // Serve static files
 // app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+// app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Use the upload router
 app.use("/", uploadRouter);
