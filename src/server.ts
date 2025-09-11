@@ -3,7 +3,6 @@ import { ApolloServer } from "apollo-server-express";
 import mongoose from "mongoose";
 import schema from "./schema/schema";
 import cors from "cors";
-import path from "path";
 import uploadRouter from "./services/fileUpload"; // path to uploads.ts
 import { verifyAccessToken } from "./graphql/authResolver";
 

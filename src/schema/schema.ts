@@ -11,7 +11,8 @@ import { indexResolver } from "../graphql/indexesResolver";
 import { courseResolver } from "../graphql/courseResolver";
 import { courseSectionResolver } from "../graphql/courseSectionResolver";
 import { authResolver } from "../graphql/authResolver";
-
+import { userCourseProgressResolver } from "../graphql/userCourseProgressResolver";
+import userCourseProgressTypeDefs from "../typeDef.ts/userCourseProgresstypeDef";
 const schema = makeExecutableSchema({
   typeDefs: [
     rootTypeDefs,
@@ -20,6 +21,7 @@ const schema = makeExecutableSchema({
     courseTypeDefs,
     courseSectionTypeDefs,
     authTypeDefs,
+    userCourseProgressTypeDefs,
   ],
   resolvers: [
     categoryResolver,
@@ -27,6 +29,7 @@ const schema = makeExecutableSchema({
     courseResolver,
     courseSectionResolver,
     authResolver,
+    userCourseProgressResolver,
   ],
 });
 

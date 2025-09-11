@@ -1,6 +1,6 @@
 import { successResponse, errorResponse } from "../utils/reponsehandler";
 import courseSection from "../models/courseSections";
-import { requireAuth, withAuth } from "../middleware/auth";
+import { withAuth } from "../middleware/auth";
 const mapSection = (section: any) => ({
   ...section,
   id: section._id.toString(),
@@ -37,7 +37,7 @@ export const courseSectionResolver = {
         const section = await courseSection.findById(id).lean();
         if (!section) return errorResponse("Section not found");
         return successResponse(
-          mapSection(section), // ✅ ensure quizzes/exercises get IDs
+          mapSection(section),
           "Section fetched successfully"
         );
       } catch (err) {
@@ -53,7 +53,6 @@ export const courseSectionResolver = {
       context: any
     ) => {
       try {
-        console.log('Creating section with:', { courseId, title, markdown, exercises, quizzes });
         
         const section = await courseSection.create({
           courseId,
@@ -65,7 +64,6 @@ export const courseSectionResolver = {
           },
         });
         
-        console.log('Section created successfully:', section);
         
         return successResponse(
           mapSection(section.toObject()),
@@ -81,38 +79,12 @@ export const courseSectionResolver = {
       }
     }),
 
-    // updateSection: async (
-    //   _: any,
-    //   { id, title, markdown, exercises, quizzes }: any
-    // ) => {
-    //   try {
-    //     const updates: any = {};
-    //     if (title) updates.title = title;
-    //     if (markdown || exercises || quizzes) {
-    //       updates.content = {};
-    //       if (markdown) updates.content.markdown = markdown;
-    //       if (exercises) updates.content.exercises = exercises;
-    //       if (quizzes) updates.content.quizzes = quizzes;
-    //     }
-
-    //     const section = await courseSection.findByIdAndUpdate(id, updates, {
-    //       new: true,
-    //     });
-    //     if (!section) return errorResponse("Section not found");
-
-    //     return successResponse(section, "Section updated successfully");
-    //   } catch (err) {
-    //     return errorResponse("Failed to update section", err);
-    //   }
-    // },
-
     updateSection: withAuth(async (
       _: any,
       { id, title, markdown, exercises, quizzes }: any,
       context: any
     ) => {
       try {
-        console.log("ecxexxexex", exercises, quizzes);
         const updates: any = {};
 
         if (title) updates.title = title;
