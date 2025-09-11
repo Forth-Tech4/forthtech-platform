@@ -1,5 +1,6 @@
 import { successResponse, errorResponse } from "../utils/reponsehandler";
 import courseSection from "../models/courseSections";
+import { requireAuth, withAuth } from "../middleware/auth";
 const mapSection = (section: any) => ({
   ...section,
   id: section._id.toString(),
@@ -46,24 +47,39 @@ export const courseSectionResolver = {
   },
 
   Mutation: {
-    createSection: async (
+    createSection: withAuth(async (
       _: any,
-      { courseId, title, markdown, exercises, quizzes }: any
+      { courseId, title, markdown, exercises, quizzes }: any,
+      context: any
     ) => {
       try {
+        console.log('Creating section with:', { courseId, title, markdown, exercises, quizzes });
+        
         const section = await courseSection.create({
           courseId,
           title,
-          content: { markdown, exercises, quizzes },
+          content: { 
+            markdown, 
+            exercises: exercises || [], 
+            quizzes: quizzes || [] 
+          },
         });
+        
+        console.log('Section created successfully:', section);
+        
         return successResponse(
           mapSection(section.toObject()),
           "Section created successfully"
         );
       } catch (err) {
+        console.error('Error creating section:', err);
+        if (err instanceof Error) {
+          console.error('Error details:', err.message);
+          console.error('Error stack:', err.stack);
+        }
         return errorResponse("Failed to create section", err);
       }
-    },
+    }),
 
     // updateSection: async (
     //   _: any,
@@ -90,9 +106,10 @@ export const courseSectionResolver = {
     //   }
     // },
 
-    updateSection: async (
+    updateSection: withAuth(async (
       _: any,
-      { id, title, markdown, exercises, quizzes }: any
+      { id, title, markdown, exercises, quizzes }: any,
+      context: any
     ) => {
       try {
         console.log("ecxexxexex", exercises, quizzes);
@@ -166,9 +183,9 @@ export const courseSectionResolver = {
       } catch (err) {
         return errorResponse("Failed to update section", err);
       }
-    },
+    }),
 
-    deleteSection: async (_: any, { id }: any) => {
+    deleteSection: withAuth(async (_: any, { id }: any, context: any) => {
       try {
         const section = await courseSection.findByIdAndDelete(id);
         if (!section) return errorResponse("Section not found");
@@ -176,6 +193,6 @@ export const courseSectionResolver = {
       } catch (err) {
         return errorResponse("Failed to delete section", err);
       }
-    },
+    }),
   },
 };

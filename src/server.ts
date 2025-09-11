@@ -5,6 +5,7 @@ import schema from "./schema/schema";
 import cors from "cors";
 import path from "path";
 import uploadRouter from "./services/fileUpload"; // path to uploads.ts
+import { verifyAccessToken } from "./graphql/authResolver";
 
 
 const startServer = async () => {
@@ -19,6 +20,22 @@ const startServer = async () => {
 
   const server = new ApolloServer({
     schema,
+    context: ({ req }) => {
+      // Get the token from the request headers
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      
+      let user = null;
+      if (token) {
+        try {
+          user = verifyAccessToken(token);
+        } catch (error) {
+          // Token is invalid or expired, user remains null
+          console.log('Invalid token:', error instanceof Error ? error.message : 'Unknown error');
+        }
+      }
+      
+      return { user };
+    },
   });
 // Serve static files
 // app.use("/uploads", express.static(path.join(__dirname, "uploads")));

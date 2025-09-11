@@ -32,10 +32,10 @@ const courseSectionSchema = new Schema<ISection>({
   },
   title: { type: String, required: true },
   content: {
-    markdown: { type: String, required: true },
+    markdown: { type: String, required: false },
     exercises: [
       {
-        question: { type: String, required: true },
+        question: { type: String, required: false },
         hint: { type: String },
         solution: { type: String },
       },
@@ -43,9 +43,9 @@ const courseSectionSchema = new Schema<ISection>({
     ],
     quizzes: [
       {
-        question: { type: String, required: true },
-        options: [{ type: String, required: true }],
-        answer: { type: String, required: true },
+        question: { type: String, required: false },
+        options: [{ type: String, required: false }],
+        answer: { type: String, required: false },
       },
         { _id: true } 
     ],

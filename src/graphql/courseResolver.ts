@@ -1,5 +1,6 @@
 import Course from "../models/courses";
 import { successResponse, errorResponse } from "../utils/reponsehandler";
+import { requireAuth, withAuth } from "../middleware/auth";
 
 export const courseResolver = {
   Query: {
@@ -44,7 +45,7 @@ export const courseResolver = {
   },
 
   Mutation: {
-    createCourse: async (_: any, { title, description, indexId }: any) => {
+    createCourse: withAuth(async (_: any, { title, description, indexId }: any, context: any) => {
       try {
         const existingCourse = await Course.findOne({ title, indexId });
         if (existingCourse) {
@@ -58,9 +59,9 @@ export const courseResolver = {
       } catch (err) {
         return errorResponse("Failed to create course", err);
       }
-    },
+    }),
 
-    updateCourse: async (_: any, { id, title, description, indexId }: any) => {
+    updateCourse: withAuth(async (_: any, { id, title, description, indexId }: any, context: any) => {
       try {
         console.log("dulepicatetttt..",id,title,description,indexId)
         const duplicate = await Course.findOne({
@@ -86,9 +87,9 @@ export const courseResolver = {
       } catch (err) {
         return errorResponse("Failed to update course", err);
       }
-    },
+    }),
 
-    deleteCourse: async (_: any, { id }: any) => {
+    deleteCourse: withAuth(async (_: any, { id }: any, context: any) => {
       try {
         const course = await Course.findByIdAndDelete(id);
         if (!course) return errorResponse("Course not found");
@@ -96,6 +97,6 @@ export const courseResolver = {
       } catch (err) {
         return errorResponse("Failed to delete course", err);
       }
-    },
+    }),
   },
 };

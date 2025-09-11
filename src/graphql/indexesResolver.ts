@@ -1,6 +1,7 @@
 import { successResponse, errorResponse } from "../utils/reponsehandler";
 import Index from "../models/indexes";
 import Category from "../models/category";
+import { requireAuth, withAuth } from "../middleware/auth";
 
 export const indexResolver = {
   Query: {
@@ -42,7 +43,7 @@ export const indexResolver = {
   },
 
   Mutation: {
-    createIndex: async (_: any, { name, description, categoryId }: any) => {
+    createIndex: withAuth(async (_: any, { name, description, categoryId }: any, context: any) => {
       try {
         const categoryExists = await Category.findById(categoryId);
         if (!categoryExists) {
@@ -66,9 +67,9 @@ export const indexResolver = {
       } catch (err) {
         return errorResponse("Failed to create index", err);
       }
-    },
+    }),
 
-    updateIndex: async (_: any, { id, name, description, categoryId }: any) => {
+    updateIndex: withAuth(async (_: any, { id, name, description, categoryId }: any, context: any) => {
       try {
         if (name && categoryId) {
           const duplicate = await Index.findOne({
@@ -99,9 +100,9 @@ export const indexResolver = {
       } catch (err) {
         return errorResponse("Failed to update index", err);
       }
-    },
+    }),
 
-    deleteIndex: async (_: any, { id }: any) => {
+    deleteIndex: withAuth(async (_: any, { id }: any, context: any) => {
       try {
         const index: any = await Index.findByIdAndDelete(id);
         if (!index) {
@@ -112,7 +113,7 @@ export const indexResolver = {
       } catch (err) {
         return errorResponse("Failed to delete index", err);
       }
-    },
+    }),
   },
 
   Index: {

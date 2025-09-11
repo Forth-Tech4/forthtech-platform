@@ -1,6 +1,7 @@
 import { successResponse, errorResponse } from "../utils/reponsehandler";
 import Category from "../models/category";
 import Index from "../models/indexes";
+import { requireAuth, withAuth } from "../middleware/auth";
 export const categoryResolver = {
   Query: {
     categories: async () => {
@@ -60,7 +61,7 @@ export const categoryResolver = {
   },
 
   Mutation: {
-    createCategory: async (_: any, { name, description }: any) => {
+    createCategory: withAuth(async (_: any, { name, description }: any, context: any) => {
       try {
         const exists = await Category.findOne({ name });
         if (exists) {
@@ -71,9 +72,9 @@ export const categoryResolver = {
       } catch (err) {
         return errorResponse("Failed to create category", err);
       }
-    },
+    }),
 
-    updateCategory: async (_: any, { id, name, description }: any) => {
+    updateCategory: withAuth(async (_: any, { id, name, description }: any, context: any) => {
       try {
         if (name) {
           const exists = await Category.findOne({ name, _id: { $ne: id } });
@@ -94,9 +95,9 @@ export const categoryResolver = {
       } catch (err) {
         return errorResponse("Failed to update category", err);
       }
-    },
+    }),
 
-    deleteCategory: async (_: any, { id }: any) => {
+    deleteCategory: withAuth(async (_: any, { id }: any, context: any) => {
       try {
         const category = await Category.findByIdAndDelete(id);
         if (!category) {
@@ -106,6 +107,6 @@ export const categoryResolver = {
       } catch (err) {
         return errorResponse("Failed to delete category", err);
       }
-    },
+    }),
   },
 };
