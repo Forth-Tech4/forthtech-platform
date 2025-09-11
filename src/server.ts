@@ -1,4 +1,5 @@
 import express from "express";
+import dotenv from "dotenv";
 import { ApolloServer } from "apollo-server-express";
 import mongoose from "mongoose";
 import schema from "./schema/schema";
@@ -7,6 +8,7 @@ import uploadRouter from "./services/fileUpload"; // path to uploads.ts
 import { verifyAccessToken } from "./graphql/authResolver";
 
 const startServer = async () => {
+  dotenv.config();
   const app: any = express();
   // ✅ Allow all origins (no need to declare frontend URL)
   app.use(

@@ -3,12 +3,22 @@ import { User } from '../models/user';
 import bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { AuthenticationError, UserInputError, ForbiddenError } from 'apollo-server-express';
+import dotenv from 'dotenv';
+
+// Load environment
+dotenv.config();
 
 // JWT Configuration
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key-change-this-in-production';
-const ACCESS_TOKEN_EXPIRE = process.env.ACCESS_TOKEN_EXPIRE || '1d';
-const REFRESH_TOKEN_EXPIRE = process.env.REFRESH_TOKEN_EXPIRE || '7d';
+
+// Expiry (seconds) from ENV with defaults
+const ACCESS_TOKEN_EXPIRE_SECONDS = Number(process.env.ACCESS_TOKEN_EXPIRE_SECONDS || 86400);
+const REFRESH_TOKEN_EXPIRE_SECONDS = Number(process.env.REFRESH_TOKEN_EXPIRE_SECONDS || 604800);
+
+// jwt.sign accepts seconds strings like '3600s'
+const ACCESS_TOKEN_EXPIRE = `${ACCESS_TOKEN_EXPIRE_SECONDS}s`;
+const REFRESH_TOKEN_EXPIRE = `${REFRESH_TOKEN_EXPIRE_SECONDS}s`;
 
 // Helper function to generate tokens
 const generateTokens = (userId: string) => {
@@ -217,8 +227,8 @@ export const authResolver = {
         user.refreshToken = refreshToken;
         await user.save();
 
-        // Calculate expiry info for access token (1 day in seconds)
-        const expiresIn = 24 * 60 * 60;
+        // Calculate expiry info for access token
+        const expiresIn = ACCESS_TOKEN_EXPIRE_SECONDS;
         const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
 
         return {
@@ -273,9 +283,14 @@ export const authResolver = {
         user.refreshToken = newRefreshToken;
         await user.save();
 
+        const expiresIn = ACCESS_TOKEN_EXPIRE_SECONDS;
+        const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
+
         return {
           accessToken,
           refreshToken: newRefreshToken,
+          expiresIn,
+          expiresAt,
           success: true,
           message: 'Tokens refreshed successfully.',
         };

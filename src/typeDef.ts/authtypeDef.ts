@@ -29,6 +29,8 @@ export const authTypeDefs = gql`
   type RefreshTokenPayload {
     accessToken: String!
     refreshToken: String!
+    expiresIn: Int!
+    expiresAt: String!
     success: Boolean!
     message: String!
   }
