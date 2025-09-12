@@ -1,13 +1,27 @@
 import { successResponse, errorResponse } from "../utils/reponsehandler";
 import courseSection from "../models/courseSections";
-import UserCourseProgress from "../models/userCourseProgress"
+import UserCourseProgress from "../models/userCourseProgress";
 
 export const userCourseProgressResolver = {
   Query: {
     getUserProgress: async (_: any, { userId, courseId }: any) => {
       try {
-        const progress = await UserCourseProgress.findOne({ userId, courseId }).lean();
-        return successResponse(progress?.completedSections || [], "Progress fetched successfully");
+        // Fetch all sections for the given course
+        const allSections = await courseSection.find({ courseId }).lean();
+        const totalSections = allSections.length;
+
+        const progress = await UserCourseProgress.findOne({
+          userId,
+          courseId,
+        }).lean();
+        const completedSections = progress?.completedSections?.length || 0;
+
+        const responseData = {
+          totalSections: totalSections || 0,
+          completedSections: completedSections || 0,
+          completedSectionsID:progress?.completedSections ||[]
+        };
+        return successResponse(responseData, "Progress fetched successfully");
       } catch (err) {
         return errorResponse("Failed to fetch progress", err);
       }
@@ -15,14 +29,17 @@ export const userCourseProgressResolver = {
   },
 
   Mutation: {
-    markSectionComplete: async (_: any, { userId, courseId, sectionId }: any) => {
+    markSectionComplete: async (
+      _: any,
+      { userId, courseId, sectionId }: any
+    ) => {
       try {
         // 1. Check if the course exists and contains the section
         const course = await courseSection.findOne({
           _id: sectionId,
-          courseId:courseId, // Query to find the course AND the section in one go
+          courseId: courseId,
         });
-        
+
         if (!course) {
           return errorResponse("Course or section not found");
         }
@@ -49,8 +66,11 @@ export const userCourseProgressResolver = {
         return errorResponse("Failed to mark section as complete", err);
       }
     },
-    
-    unmarkSectionComplete: async (_: any, { userId, courseId, sectionId }: any) => {
+
+    unmarkSectionComplete: async (
+      _: any,
+      { userId, courseId, sectionId }: any
+    ) => {
       try {
         // 1. Check if the course and section exist
         const sectionExists = await courseSection.findOne({
@@ -61,7 +81,7 @@ export const userCourseProgressResolver = {
         if (!sectionExists) {
           return errorResponse("Course or section not found");
         }
-        
+
         // 2. Find and update the user's progress
         const updatedProgress = await UserCourseProgress.findOneAndUpdate(
           { userId, courseId },
@@ -73,11 +93,13 @@ export const userCourseProgressResolver = {
           return errorResponse("User progress not found");
         }
 
-        return successResponse(updatedProgress, "Section unmarked successfully");
+        return successResponse(
+          updatedProgress,
+          "Section unmarked successfully"
+        );
       } catch (err) {
         return errorResponse("Failed to unmark section", err);
       }
     },
-
   },
 };

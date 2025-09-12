@@ -11,7 +11,6 @@ export const categoryResolver = {
           return errorResponse("No categories found");
         }
 
-        // attach indexes for each category
         const mappedCategories = await Promise.all(
           categories.map(async (c) => {
             const indexes = await Index.find({ categoryId: c._id }).lean();
@@ -67,7 +66,11 @@ export const categoryResolver = {
         if (exists) {
           return errorResponse("Category already exists");
         }
-        const category = await Category.create({ name, description });
+          const category = await Category.create({
+            name,
+            description,
+            created_by: context.user.userId,
+          });
         return successResponse(category, "Category created successfully");
       } catch (err) {
         return errorResponse("Failed to create category", err);

@@ -166,5 +166,33 @@ export const courseSectionResolver = {
         return errorResponse("Failed to delete section", err);
       }
     }),
+
+    deleteExercise: withAuth(async (_: any, { sectionId, exerciseId }: any, context: any) => {
+      try {
+        const result = await courseSection.updateOne(
+          { _id: sectionId },
+          { $pull: { "content.exercises": { _id: exerciseId } } }
+        );
+        if (result.modifiedCount === 0) return errorResponse("Exercise not found or not deleted");
+        const section = await courseSection.findById(sectionId);
+        return successResponse(mapSection(section), "Exercise deleted successfully");
+      } catch (err) {
+        return errorResponse("Failed to delete exercise", err);
+      }
+    }),
+
+    deleteQuiz: withAuth(async (_: any, { sectionId, quizId }: any, context: any) => {
+      try {
+        const result = await courseSection.updateOne(
+          { _id: sectionId },
+          { $pull: { "content.quizzes": { _id: quizId } } }
+        );
+        if (result.modifiedCount === 0) return errorResponse("Quiz not found or not deleted");
+        const section = await courseSection.findById(sectionId);
+        return successResponse(mapSection(section), "Quiz deleted successfully");
+      } catch (err) {
+        return errorResponse("Failed to delete quiz", err);
+      }
+    }),
   },
 };

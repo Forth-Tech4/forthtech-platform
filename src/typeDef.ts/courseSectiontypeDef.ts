@@ -16,7 +16,7 @@ type Quiz {
 }
 
   type SectionContent {
-    markdown: String!
+    markdown: String
     exercises: [Exercise]
     quizzes: [Quiz]
   }
@@ -43,15 +43,17 @@ type Quiz {
   }
 
   input ExerciseInput {
-    question: String!
+    id: ID  
+    question: String
     hint: String
     solution: String
   }
 
   input QuizInput {
-    question: String!
-    options: [String!]!
-    answer: String!
+    id: ID 
+    question: String
+    options: [String]
+    answer: String
   }
 
   extend type Query {
@@ -63,7 +65,7 @@ type Quiz {
     createSection(
       courseId: ID!
       title: String!
-      markdown: String!
+      markdown: String
       exercises: [ExerciseInput]
       quizzes: [QuizInput]
     ): SectionResponse
@@ -76,7 +78,9 @@ type Quiz {
       quizzes: [QuizInput]
     ): SectionResponse
 
-    deleteSection(id: ID!): SectionResponse
+  deleteSection(id: ID!): SectionResponse
+  deleteExercise(sectionId: ID!, exerciseId: ID!): SectionResponse
+  deleteQuiz(sectionId: ID!, quizId: ID!): SectionResponse
   }
 `;
 

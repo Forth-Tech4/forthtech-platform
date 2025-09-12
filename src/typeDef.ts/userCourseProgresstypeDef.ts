@@ -15,11 +15,17 @@ const userCourseProgressTypeDefs = gql`
     data: UserProgress
   }
 
+type UserProgressData {
+  totalSections: Int!
+  completedSections: Int!
+  completedSectionsID: [String!]!
+}
+
   type UserProgressListResponse {
     success: Boolean!
     message: String
     error: String
-    data: [String!]!
+    data: UserProgressData
   }
 
   extend type Query {
